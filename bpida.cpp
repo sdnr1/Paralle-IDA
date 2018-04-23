@@ -1,5 +1,5 @@
-#include <iostream>
-#include <cuda.h>
+#include <bits/stdc++.h>
+//#include <cuda.h>
 
 #define INF 10000
 #define maxLimitF 80
@@ -11,9 +11,8 @@ using namespace std;
 
 const int MV = 4;
 const int SZ = 4;
-const int ThreadsPerBlock = 512;
+//const int ThreadsPerBlock = 512;
 const int stackSize = (1 << 10);
-const int cutoff = (1 << 9) + (1 << 8);
 
 struct Node
 {
@@ -66,7 +65,7 @@ struct S
         setH();
     }
 
-    __device__ bool move(int type)
+    /*__device__*/ bool move(int type)
     {
         if(type == 0)
         {
@@ -129,15 +128,15 @@ struct Q
     int moveType;
 };
 
-__global__ void BPIDA(S *rootSet, int *goalSeq, int *finalG, int *flag)
+/*__global__*/ void BPIDA(S *rootSet, int *goalSeq, int *finalG, int *flag)
 {
-    int idx = threadIdx.x;
-     __shared__ int limitF;
-     __shared__ int newLimitF;
-     __shared__ int ss;
-     __shared__ Q st[stackSize];
-     __shared__ Q *stPtr;
-     __shared__ S goalNode;
+    int idx = 0; //threadIdx.x;
+     /*__shared__*/ int limitF;
+     /*__shared__*/ int newLimitF;
+     /*__shared__*/ int ss;
+     /*__shared__*/ Q st[stackSize];
+     /*__shared__*/ Q *stPtr;
+     /*__shared__*/ S goalNode;
     Q q;
     if(idx == 0)
     {
@@ -148,7 +147,7 @@ __global__ void BPIDA(S *rootSet, int *goalSeq, int *finalG, int *flag)
 
     while(*flag == -1)
     {
-        __syncthreads();
+        //__syncthreads();
         if(ss == 0)
         {
             if(idx == 0)
@@ -159,7 +158,7 @@ __global__ void BPIDA(S *rootSet, int *goalSeq, int *finalG, int *flag)
                     *flag = -2;
                 else
                 {
-                    q.s = rootSet[blockIdx.x];
+                    q.s = rootSet[0]; //blockIdx.x];
                     for(int i=0; i<MV; i++)
                     {
                         q.moveType = i;
@@ -176,7 +175,7 @@ __global__ void BPIDA(S *rootSet, int *goalSeq, int *finalG, int *flag)
             q = *--stPtr;
             f = true;
         }
-        __syncthreads();
+        //__syncthreads();
         if(f)
         {
             ss--;
@@ -188,7 +187,7 @@ __global__ void BPIDA(S *rootSet, int *goalSeq, int *finalG, int *flag)
                 {
                     if(q.s.h == 0)
                     {
-                        *flag = blockIdx.x;
+                        *flag = 0; //blockIdx.x;
                         goalNode = q.s;
                     }
                     else
@@ -211,7 +210,7 @@ __global__ void BPIDA(S *rootSet, int *goalSeq, int *finalG, int *flag)
         }
     }
 
-    if(blockIdx.x == *flag and idx == 0)
+    if(/*blockIdx.x*/ 0 == *flag and idx == 0)
     {
         int cost = goalNode.g;
         Node *ptr = goalNode.n;
@@ -258,33 +257,40 @@ int main()
         start_h.init();
 
         // Allocate memory and load init
+        /*
         S *rootSet_d;
         int *goalSeq_d, *finalG_d, *flag_d;
         
         cudaMalloc((void **)&rootSet_d, sizeof(S));
         cudaMalloc((void **)&flag_d, sizeof(int));
-        cudaMalloc((void **)&finalG_d, sizeof(int));
-        cudaMalloc((void **)&goalSeq_d, sizeof(int) * maxLimitF);
+        /cudaMalloc((void **)&finalG_d, sizeof(int));
 
         cudaMemcpy(rootSet_d, &start_h, sizeof(S), cudaMemcpyHostToDevice);
         cudaMemcpy(flag_d, &flag_h, sizeof(int), cudaMemcpyHostToDevice);
+        */
 
         // Launch kernel
-        BPIDA<<<1, ThreadsPerBlock>>>(rootSet_d, goalSeq_d, finalG_d, flag_d);
+        //BPIDA<<<1, ThreadsPerBlock>>>(rootSet_d, goalSeq_d, finalG_d, flag_d);
+        BPIDA(&start_h, moves, &cost, &flag_h);
 
         // Extract results
+        /*
         cudaMemcpy(&flag_h, flag_d, sizeof(int), cudaMemcpyDeviceToHost);
         if(flag_h >= 0)
         {
             cudaMemcpy(&cost, finalG_d, sizeof(int), cudaMemcpyDeviceToHost);
-            cudaMemcpy(moves, goalSeq_d, sizeof(int) * maxLimitF, cudaMemcpyDeviceToHost);
+            moves = new int[cost];
+            cudaMemcpy(moves, goalSeq_d, sizeof(int) * cost, cudaMemcpyDeviceToHost);
         }
+        */
 
         // Free memory
+        /*
         cudaFree(rootSet_d);
         cudaFree(goalSeq_d);
         cudaFree(finalG_d);
         cudaFree(flag_d);
+        */
 
         // Display results
         if(flag_h >= 0)
