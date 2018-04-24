@@ -13,6 +13,7 @@ const int MV = 4;
 const int SZ = 4;
 //const int ThreadsPerBlock = 512;
 const int stackSize = (1 << 10);
+const int cutoff = (1 << 9) + (1 << 8);
 
 struct Node
 {
